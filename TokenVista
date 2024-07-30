@@ -1,0 +1,42 @@
+import requests
+import pandas as pd
+import matplotlib.pyplot as plt
+
+class TokenVista:
+    def __init__(self):
+        self.base_url = 'https://api.coingecko.com/api/v3'
+
+    def get_crypto_price_history(self, crypto_id: str, days: int = 30) -> pd.DataFrame:
+        """Fetches historical price data for a specific cryptocurrency."""
+        url = f"{self.base_url}/coins/{crypto_id}/market_chart"
+        params = {
+            'vs_currency': 'usd',
+            'days': days
+        }
+        response = requests.get(url, params=params)
+        data = response.json()
+        prices = data.get('prices', [])
+        df = pd.DataFrame(prices, columns=['timestamp', 'price'])
+        df['timestamp'] = pd.to_datetime(df['timestamp'], unit='ms')
+        return df
+
+    def plot_price_chart(self, crypto_id: str, days: int = 30):
+        """Plots historical price trends for a specific cryptocurrency."""
+        df = self.get_crypto_price_history(crypto_id, days)
+        
+        plt.figure(figsize=(12, 6))
+        plt.plot(df['timestamp'], df['price'], marker='o', linestyle='-', color='b', label=crypto_id.capitalize())
+        plt.title(f'{crypto_id.capitalize()} Price Chart')
+        plt.xlabel('Date')
+        plt.ylabel('Price (USD)')
+        plt.legend()
+        plt.grid(True)
+        plt.show()
+
+# Example Usage
+if __name__ == "__main__":
+    token_vista = TokenVista()
+
+    # Fetch and plot price history of Bitcoin for the last 30 days
+    crypto_id = 'bitcoin'
+    token_vista.plot_price_chart(crypto_id, days=30)
